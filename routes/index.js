@@ -5,7 +5,7 @@ var Sequelize = require('sequelize');
 var redis = require('redis');
 var rc = redis.createClient(6379, 'localhost');
 var sequelize = new Sequelize('mydb', 'root', 'mani123', {
-  host: "127.0.0.1",
+  host: "localhost",
   port: 3306,
   maxConcurrentQueries: 1000,
   dialect: 'mariadb'
@@ -18,6 +18,15 @@ var User = sequelize.define('tabs',{
 		 },
 			{
 				timestamps:false
+			},
+			{
+        indexes: [
+            {
+				 name: 'myindex',
+                unique: false,
+                fields: ['eEmail']
+            }
+]
 			});
 			
 			
@@ -38,7 +47,7 @@ var User = sequelize.define('tabs',{
 			var cacheObj = cacher(sequelize, rc)
 		.model('tabs')
 		.ttl(1000);
- router.post('/api/retrieve', function(req, res,next) 
+ router.post('/api/retrieve', function(req, res,next,err) 
 	{
 		console.log('in api')
 		var email=req.body.eEmail;
@@ -59,11 +68,18 @@ var User = sequelize.define('tabs',{
 	  else
 	  {
 		  console.log("its empty");
-		res.json({"output":user});
+		res.json(err);
 	  }
     
   }).catch(next)
-	  
+  /*.catch(Sequelize.ConnectionError,function(){
+	  var e={
+		  message :"ER_BAD_DB_ERROR:Invalid DB Name"
+	  };
+	  console.log("Invalid DB Name ")
+	  next(e)
+  })
+    */
  
   
 	
